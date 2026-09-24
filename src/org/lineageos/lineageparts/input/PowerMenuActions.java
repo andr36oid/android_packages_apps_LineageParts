@@ -18,13 +18,18 @@
 package org.lineageos.lineageparts.input;
 
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.content.pm.UserInfo;
 import android.os.Bundle;
 import android.os.UserHandle;
 import android.os.UserManager;
 import android.provider.Settings;
+import android.text.TextUtils;
 
 import androidx.preference.CheckBoxPreference;
+import androidx.preference.MultiSelectListPreference;
 import androidx.preference.Preference;
 
 import com.android.internal.widget.LockPatternUtils;
@@ -34,8 +39,12 @@ import org.lineageos.lineageparts.R;
 import org.lineageos.lineageparts.SettingsPreferenceFragment;
 import org.lineageos.lineageparts.utils.TelephonyUtils;
 
+import java.text.Collator;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import lineageos.app.LineageGlobalActions;
 import lineageos.providers.LineageSettings;
@@ -45,6 +54,13 @@ import static org.lineageos.internal.util.PowerMenuConstants.*;
 public class PowerMenuActions extends SettingsPreferenceFragment {
     final static String TAG = "PowerMenuActions";
 
+    private static final String KEY_PINNED_APPS = "pinned_apps";
+
+    private MultiSelectListPreference mPinnedAppsPref;
+    private CheckBoxPreference mHomePref;
+    private CheckBoxPreference mAppSwitcherPref;
+    private CheckBoxPreference mCloseAppsPref;
+    private CheckBoxPreference mSettingsPref;
     private CheckBoxPreference mScreenshotPref;
     private CheckBoxPreference mAirplanePref;
     private CheckBoxPreference mUsersPref;
@@ -70,7 +86,15 @@ public class PowerMenuActions extends SettingsPreferenceFragment {
         mLineageGlobalActions = LineageGlobalActions.getInstance(mContext);
 
         for (String action : PowerMenuConstants.getAllActions()) {
-            if (action.equals(GLOBAL_ACTION_KEY_SCREENSHOT)) {
+            if (action.equals(GLOBAL_ACTION_KEY_HOME)) {
+                mHomePref = findPreference(GLOBAL_ACTION_KEY_HOME);
+            } else if (action.equals(GLOBAL_ACTION_KEY_APP_SWITCHER)) {
+                mAppSwitcherPref = findPreference(GLOBAL_ACTION_KEY_APP_SWITCHER);
+            } else if (action.equals(GLOBAL_ACTION_KEY_CLOSE_APPS)) {
+                mCloseAppsPref = findPreference(GLOBAL_ACTION_KEY_CLOSE_APPS);
+            } else if (action.equals(GLOBAL_ACTION_KEY_SETTINGS)) {
+                mSettingsPref = findPreference(GLOBAL_ACTION_KEY_SETTINGS);
+            } else if (action.equals(GLOBAL_ACTION_KEY_SCREENSHOT)) {
                 mScreenshotPref = findPreference(GLOBAL_ACTION_KEY_SCREENSHOT);
             } else if (action.equals(GLOBAL_ACTION_KEY_AIRPLANE)) {
                 mAirplanePref = findPreference(GLOBAL_ACTION_KEY_AIRPLANE);
@@ -91,11 +115,42 @@ public class PowerMenuActions extends SettingsPreferenceFragment {
         }
 
         mLocalUserConfig = mLineageGlobalActions.getLocalUserConfig();
+
+        mPinnedAppsPref = findPreference(KEY_PINNED_APPS);
+        loadLaunchableApps();
+        mPinnedAppsPref.setOnPreferenceChangeListener((preference, newValue) -> {
+            @SuppressWarnings("unchecked")
+            final Set<String> packages = (Set<String>) newValue;
+            savePinnedApps(packages);
+            return true;
+        });
     }
 
     @Override
     public void onStart() {
         super.onStart();
+
+        loadPinnedApps();
+
+        if (mHomePref != null) {
+            mHomePref.setChecked(mLineageGlobalActions.userConfigContains(
+                    GLOBAL_ACTION_KEY_HOME));
+        }
+
+        if (mAppSwitcherPref != null) {
+            mAppSwitcherPref.setChecked(mLineageGlobalActions.userConfigContains(
+                    GLOBAL_ACTION_KEY_APP_SWITCHER));
+        }
+
+        if (mCloseAppsPref != null) {
+            mCloseAppsPref.setChecked(mLineageGlobalActions.userConfigContains(
+                    GLOBAL_ACTION_KEY_CLOSE_APPS));
+        }
+
+        if (mSettingsPref != null) {
+            mSettingsPref.setChecked(mLineageGlobalActions.userConfigContains(
+                    GLOBAL_ACTION_KEY_SETTINGS));
+        }
 
         if (mScreenshotPref != null) {
             mScreenshotPref.setChecked(mLineageGlobalActions.userConfigContains(
@@ -143,7 +198,23 @@ public class PowerMenuActions extends SettingsPreferenceFragment {
     public boolean onPreferenceTreeClick(Preference preference) {
         boolean value;
 
-        if (preference == mScreenshotPref) {
+        if (preference == mHomePref) {
+            value = mHomePref.isChecked();
+            mLineageGlobalActions.updateUserConfig(value, GLOBAL_ACTION_KEY_HOME);
+
+        } else if (preference == mAppSwitcherPref) {
+            value = mAppSwitcherPref.isChecked();
+            mLineageGlobalActions.updateUserConfig(value, GLOBAL_ACTION_KEY_APP_SWITCHER);
+
+        } else if (preference == mCloseAppsPref) {
+            value = mCloseAppsPref.isChecked();
+            mLineageGlobalActions.updateUserConfig(value, GLOBAL_ACTION_KEY_CLOSE_APPS);
+
+        } else if (preference == mSettingsPref) {
+            value = mSettingsPref.isChecked();
+            mLineageGlobalActions.updateUserConfig(value, GLOBAL_ACTION_KEY_SETTINGS);
+
+        } else if (preference == mScreenshotPref) {
             value = mScreenshotPref.isChecked();
             mLineageGlobalActions.updateUserConfig(value, GLOBAL_ACTION_KEY_SCREENSHOT);
 
@@ -175,6 +246,84 @@ public class PowerMenuActions extends SettingsPreferenceFragment {
             return super.onPreferenceTreeClick(preference);
         }
         return true;
+    }
+
+    /**
+     * Offers every app with a launcher icon for pinning, sorted by name.
+     */
+    private void loadLaunchableApps() {
+        final PackageManager pm = mContext.getPackageManager();
+        final Intent launcherIntent = new Intent(Intent.ACTION_MAIN)
+                .addCategory(Intent.CATEGORY_LAUNCHER);
+        final List<String[]> apps = new ArrayList<>();
+        final Set<String> packages = new HashSet<>();
+        for (ResolveInfo info : pm.queryIntentActivities(launcherIntent, 0)) {
+            final String packageName = info.activityInfo.packageName;
+            if (packages.add(packageName)) {
+                apps.add(new String[] {
+                        info.activityInfo.applicationInfo.loadLabel(pm).toString(),
+                        packageName });
+            }
+        }
+        final Collator collator = Collator.getInstance();
+        apps.sort((a, b) -> collator.compare(a[0], b[0]));
+
+        final CharSequence[] labels = new CharSequence[apps.size()];
+        final CharSequence[] packageNames = new CharSequence[apps.size()];
+        for (int i = 0; i < apps.size(); i++) {
+            labels[i] = apps.get(i)[0];
+            packageNames[i] = apps.get(i)[1];
+        }
+        mPinnedAppsPref.setEntries(labels);
+        mPinnedAppsPref.setEntryValues(packageNames);
+    }
+
+    private void loadPinnedApps() {
+        final String pinned = Settings.Secure.getStringForUser(getContentResolver(),
+                POWER_MENU_PINNED_APPS, UserHandle.USER_CURRENT);
+        final Set<String> packages = new HashSet<>();
+        if (!TextUtils.isEmpty(pinned)) {
+            packages.addAll(Arrays.asList(pinned.split("\\|")));
+        }
+        // Only keep what is still installed
+        packages.retainAll(Arrays.asList(toStrings(mPinnedAppsPref.getEntryValues())));
+        mPinnedAppsPref.setValues(packages);
+        updatePinnedAppsSummary(packages);
+    }
+
+    private void savePinnedApps(Set<String> packages) {
+        // Keep the order of the list, which is also the order in the power menu
+        final List<String> ordered = new ArrayList<>();
+        for (String packageName : toStrings(mPinnedAppsPref.getEntryValues())) {
+            if (packages.contains(packageName)) {
+                ordered.add(packageName);
+            }
+        }
+        Settings.Secure.putStringForUser(getContentResolver(), POWER_MENU_PINNED_APPS,
+                String.join("|", ordered), UserHandle.USER_CURRENT);
+        updatePinnedAppsSummary(packages);
+    }
+
+    private void updatePinnedAppsSummary(Set<String> packages) {
+        final CharSequence[] labels = mPinnedAppsPref.getEntries();
+        final CharSequence[] packageNames = mPinnedAppsPref.getEntryValues();
+        final List<CharSequence> pinned = new ArrayList<>();
+        for (int i = 0; i < packageNames.length; i++) {
+            if (packages.contains(packageNames[i].toString())) {
+                pinned.add(labels[i]);
+            }
+        }
+        mPinnedAppsPref.setSummary(pinned.isEmpty()
+                ? getString(R.string.power_menu_pinned_apps_none)
+                : TextUtils.join(", ", pinned));
+    }
+
+    private static String[] toStrings(CharSequence[] values) {
+        final String[] strings = new String[values.length];
+        for (int i = 0; i < values.length; i++) {
+            strings[i] = values[i].toString();
+        }
+        return strings;
     }
 
     private void updatePreferences() {
