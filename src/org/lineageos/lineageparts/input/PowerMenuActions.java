@@ -35,6 +35,7 @@ import androidx.preference.Preference;
 import com.android.internal.widget.LockPatternUtils;
 
 import org.lineageos.internal.util.PowerMenuConstants;
+import org.lineageos.internal.util.PowerMenuUtils;
 import org.lineageos.lineageparts.R;
 import org.lineageos.lineageparts.SettingsPreferenceFragment;
 import org.lineageos.lineageparts.utils.TelephonyUtils;
@@ -291,8 +292,7 @@ public class PowerMenuActions extends SettingsPreferenceFragment {
     }
 
     private void loadPinnedApps() {
-        final String pinned = Settings.Secure.getStringForUser(getContentResolver(),
-                POWER_MENU_PINNED_APPS, UserHandle.USER_CURRENT);
+        final String pinned = PowerMenuUtils.getPinnedApps(mContext, UserHandle.USER_CURRENT);
         final Set<String> packages = new HashSet<>();
         if (!TextUtils.isEmpty(pinned)) {
             packages.addAll(Arrays.asList(pinned.split("\\|")));
