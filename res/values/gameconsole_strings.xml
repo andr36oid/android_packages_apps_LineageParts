@@ -22,6 +22,8 @@
     <string name="power_menu_app_switcher_title">App switcher</string>
     <string name="power_menu_close_apps_title">Close background apps</string>
     <string name="power_menu_close_apps_summary">Closes every app except the one on screen</string>
+    <string name="power_menu_kill_app_title">Kill foreground app</string>
+    <string name="power_menu_kill_app_summary">Small button at the bottom that stops the app on screen, for apps that stopped responding</string>
     <string name="power_menu_settings_title">Settings</string>
     <string name="power_menu_settings_summary">Hold it in the power menu to get back here</string>
 </resources>

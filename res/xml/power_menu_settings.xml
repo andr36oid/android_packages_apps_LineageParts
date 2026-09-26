@@ -42,6 +42,12 @@
         android:defaultValue="false" />
 
     <CheckBoxPreference
+        android:key="killapp"
+        android:title="@string/power_menu_kill_app_title"
+        android:summary="@string/power_menu_kill_app_summary"
+        android:defaultValue="false" />
+
+    <CheckBoxPreference
         android:key="settings"
         android:title="@string/power_menu_settings_title"
         android:summary="@string/power_menu_settings_summary"

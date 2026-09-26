@@ -60,6 +60,7 @@ public class PowerMenuActions extends SettingsPreferenceFragment {
     private CheckBoxPreference mHomePref;
     private CheckBoxPreference mAppSwitcherPref;
     private CheckBoxPreference mCloseAppsPref;
+    private CheckBoxPreference mKillAppPref;
     private CheckBoxPreference mSettingsPref;
     private CheckBoxPreference mScreenshotPref;
     private CheckBoxPreference mAirplanePref;
@@ -92,6 +93,8 @@ public class PowerMenuActions extends SettingsPreferenceFragment {
                 mAppSwitcherPref = findPreference(GLOBAL_ACTION_KEY_APP_SWITCHER);
             } else if (action.equals(GLOBAL_ACTION_KEY_CLOSE_APPS)) {
                 mCloseAppsPref = findPreference(GLOBAL_ACTION_KEY_CLOSE_APPS);
+            } else if (action.equals(GLOBAL_ACTION_KEY_KILL_APP)) {
+                mKillAppPref = findPreference(GLOBAL_ACTION_KEY_KILL_APP);
             } else if (action.equals(GLOBAL_ACTION_KEY_SETTINGS)) {
                 mSettingsPref = findPreference(GLOBAL_ACTION_KEY_SETTINGS);
             } else if (action.equals(GLOBAL_ACTION_KEY_SCREENSHOT)) {
@@ -145,6 +148,11 @@ public class PowerMenuActions extends SettingsPreferenceFragment {
         if (mCloseAppsPref != null) {
             mCloseAppsPref.setChecked(mLineageGlobalActions.userConfigContains(
                     GLOBAL_ACTION_KEY_CLOSE_APPS));
+        }
+
+        if (mKillAppPref != null) {
+            mKillAppPref.setChecked(mLineageGlobalActions.userConfigContains(
+                    GLOBAL_ACTION_KEY_KILL_APP));
         }
 
         if (mSettingsPref != null) {
@@ -209,6 +217,10 @@ public class PowerMenuActions extends SettingsPreferenceFragment {
         } else if (preference == mCloseAppsPref) {
             value = mCloseAppsPref.isChecked();
             mLineageGlobalActions.updateUserConfig(value, GLOBAL_ACTION_KEY_CLOSE_APPS);
+
+        } else if (preference == mKillAppPref) {
+            value = mKillAppPref.isChecked();
+            mLineageGlobalActions.updateUserConfig(value, GLOBAL_ACTION_KEY_KILL_APP);
 
         } else if (preference == mSettingsPref) {
             value = mSettingsPref.isChecked();
