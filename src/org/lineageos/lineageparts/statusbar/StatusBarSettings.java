@@ -101,6 +101,8 @@ public class StatusBarSettings extends SettingsPreferenceFragment
         mQuickPulldown = findPreference(STATUS_BAR_QUICK_QS_PULLDOWN);
         mQuickPulldown.setOnPreferenceChangeListener(this);
         updateQuickPulldownSummary(mQuickPulldown.getIntValue(0));
+        // andr36oid: no Quick pulldown option, the console has no touch screen to pull with
+        getPreferenceScreen().removePreference(mQuickPulldown);
     }
 
     @Override
@@ -224,6 +226,7 @@ public class StatusBarSettings extends SettingsPreferenceFragment
         @Override
         public Set<String> getNonIndexableKeys(Context context) {
             final Set<String> result = new ArraySet<String>();
+            result.add(STATUS_BAR_QUICK_QS_PULLDOWN);
 
             if (DeviceUtils.hasNotch(context)) {
                 result.add(NETWORK_TRAFFIC_SETTINGS);
