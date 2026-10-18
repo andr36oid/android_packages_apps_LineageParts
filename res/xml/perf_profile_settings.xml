@@ -20,8 +20,10 @@
     android:key="perf_profile_settings"
     android:title="@string/perf_profile_settings_title" >
 
+    <!-- andr36oid: hidden, Android battery saver does nothing useful on the console -->
     <PreferenceCategory
         android:key="power_save_category"
+        settings:isPreferenceVisible="false"
         android:title="@string/power_save_category_title">
 
         <SwitchPreference
