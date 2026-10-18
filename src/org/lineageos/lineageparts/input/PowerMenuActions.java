@@ -113,7 +113,9 @@ public class PowerMenuActions extends SettingsPreferenceFragment {
             }
         }
 
-        if (!TelephonyUtils.isVoiceCapable(getActivity())) {
+        // andr36oid: Users, Bug report and Emergency are not in the XML any more, their
+        // preferences stay null
+        if (mEmergencyPref != null && !TelephonyUtils.isVoiceCapable(getActivity())) {
             getPreferenceScreen().removePreference(mEmergencyPref);
             mEmergencyPref = null;
         }

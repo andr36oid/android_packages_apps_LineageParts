@@ -126,8 +126,10 @@
         <activity android:name=".gestures.KeyHandler" />
 
         <!-- Profiles settings (System category) -->
+        <!-- andr36oid: Profiles entry is off, the console does not use it -->
         <activity-alias
             android:name=".profiles.ProfilesSettings"
+            android:enabled="false"
             android:label="@string/profiles_settings_title"
             android:icon="@drawable/ic_settings_profiles"
             android:targetActivity="PartsActivity">
@@ -170,8 +172,10 @@
         </activity-alias>
 
         <!-- Trust interface (Privacy category) -->
+        <!-- andr36oid: Trust interface entry is off, the console does not use it -->
         <activity-alias
             android:name=".trust.TrustPreferences"
+            android:enabled="false"
             android:label="@string/trust_title"
             android:targetActivity="PartsActivity">
             <intent-filter>
@@ -191,8 +195,10 @@
         </activity-alias>
 
         <!-- Contributors Cloud (MyDeviceInfo category) -->
+        <!-- andr36oid: Contributors entry is off, the console does not use it -->
         <activity-alias
             android:name=".contributors.ContributorsCloudFragment"
+            android:enabled="false"
             android:label="@string/contributors_cloud_fragment_title"
             android:targetActivity="PartsActivity">
             <intent-filter>
@@ -237,8 +243,10 @@
                  android:exported="false" />
 
         <!-- Weather settings -->
+        <!-- andr36oid: Weather entry is off, the console does not use it -->
         <activity-alias
             android:name=".weather.WeatherServiceSettings"
+            android:enabled="false"
             android:label="@string/weather_settings_title"
             android:targetActivity="PartsActivity">
             <intent-filter android:priority="1">

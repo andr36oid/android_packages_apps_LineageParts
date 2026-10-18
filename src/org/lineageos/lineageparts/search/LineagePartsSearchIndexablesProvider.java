@@ -67,6 +67,11 @@ public class LineagePartsSearchIndexablesProvider extends SearchIndexablesProvid
 
     private static final String TAG = LineagePartsSearchIndexablesProvider.class.getSimpleName();
 
+    // andr36oid: parts whose pages the console does not offer, they stay out of search
+    private static final Set<String> HIDDEN_PARTS = new ArraySet<>(java.util.Arrays.asList(
+            "notification_lights", "profiles_settings", "trust_interface", "weather_settings",
+            "lineagestats", "contributors"));
+
     private static final String FIELD_NAME_SEARCH_INDEX_DATA_PROVIDER =
             "SEARCH_INDEX_DATA_PROVIDER";
 
@@ -79,7 +84,8 @@ public class LineagePartsSearchIndexablesProvider extends SearchIndexablesProvid
         // from parts_catalog.xml for indexing
         for (String key : keys) {
             PartInfo i = PartsList.get(getContext()).getPartInfo(key);
-            if (i == null || i.getXmlRes() <= 0 || !i.isAvailable()) {
+            if (i == null || i.getXmlRes() <= 0 || !i.isAvailable()
+                    || HIDDEN_PARTS.contains(key)) {
                 continue;
             }
 
@@ -106,7 +112,7 @@ public class LineagePartsSearchIndexablesProvider extends SearchIndexablesProvid
         // which don't have an associated XML resource
         for (String key : keys) {
             PartInfo i = PartsList.get(getContext()).getPartInfo(key);
-            if (i == null || !i.isAvailable()) {
+            if (i == null || !i.isAvailable() || HIDDEN_PARTS.contains(key)) {
                 continue;
             }
 
@@ -167,7 +173,7 @@ public class LineagePartsSearchIndexablesProvider extends SearchIndexablesProvid
 
         for (String key : keys) {
             PartInfo i = PartsList.get(getContext()).getPartInfo(key);
-            if (i == null || !i.isAvailable()) {
+            if (i == null || !i.isAvailable() || HIDDEN_PARTS.contains(key)) {
                 continue;
             }
 
