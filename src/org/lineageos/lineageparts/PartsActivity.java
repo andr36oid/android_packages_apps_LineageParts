@@ -41,6 +41,8 @@ import org.lineageos.lineageparts.widget.SwitchBar;
 import org.lineageos.internal.lineageparts.PartInfo;
 import org.lineageos.internal.lineageparts.PartsList;
 
+import org.andr36oid.hints.HintBar;
+
 public class PartsActivity extends FragmentActivity implements
         PreferenceFragment.OnPreferenceStartFragmentCallback,
         PreferenceFragment.OnPreferenceStartScreenCallback {
@@ -64,6 +66,8 @@ public class PartsActivity extends FragmentActivity implements
         super.onCreate(bundle);
 
         setContentView(R.layout.lineageparts);
+        // andr36oid: the button hints along the bottom, as in Settings
+        HintBar.attachDefault(this);
 
         String action = getIntent().getAction();
         ComponentName cn = getIntent().getComponent();

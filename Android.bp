@@ -34,6 +34,7 @@ android_app {
     },
 
     static_libs: [
+        "andr36oid-hint-bar",
         "androidx.appcompat_appcompat",
         "androidx.dynamicanimation_dynamicanimation",
         "androidx.legacy_legacy-support-v13",
